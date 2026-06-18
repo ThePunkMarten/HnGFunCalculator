@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heroes & Generals "Fun Battle" Calculator</title>
+    <style>
+        :root {
+            --bg-color: #1e1e24;
+            --card-bg: #2a2a35;
+            --text-color: #f0f0f5;
+            --accent-color: #4f46e5;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --border-color: #3f3f46;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            padding: 2rem 1rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.75rem;
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.65rem;
+            background-color: #18181b;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .result-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 6px;
+            background-color: #18181b;
+            border-left: 5px solid var(--border-color);
+        }
+
+        .status-fun {
+            border-left-color: var(--success-color);
+        }
+
+        .status-not-fun {
+            border-left-color: var(--danger-color);
+        }
+
+        .status-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-fun .status-title { color: var(--success-color); }
+        .status-not-fun .status-title { color: var(--danger-color); }
+
+        ul {
+            margin: 0;
+            padding-left: 1.25rem;
+            font-size: 0.95rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>H&G Battle "Fun" Calculator</h1>
+    
+    <div class="grid">
+        <div class="form-group">
+            <label for="battleType">Battle Type</label>
+            <select id="battleType">
+                <option value="assault-skirmish">Assault / Skirmish</option>
+                <option value="encounter">Encounter</option>
+            </select>
+        </div>
+        
+        <div class="form-group" id="factionGroup">
+            <label for="factions">Factions Involved</label>
+            <select id="factions">
+                <option value="2">2 Factions</option>
+                <option value="3">3 Factions</option>
+            </select>
+        </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+    <h3>Available Tickets (Per Faction)</h3>
+
+    <div class="grid">
+        <div class="form-group">
+            <label for="infantry">Infantry Spawns</label>
+            <input type="number" id="infantry" value="0" min="0">
+        </div>
+        <div class="form-group">
+            <label for="paratrooper">Paratrooper Spawns</label>
+            <input type="number" id="paratrooper" value="0" min="0">
+        </div>
+        <div class="form-group">
+            <label for="tank">Tank Spawns</label>
+            <input type="number" id="tank" value="0" min="0">
+        </div>
+        <div class="form-group">
+            <label for="plane">Plane Spawns</label>
+            <input type="number" id="plane" value="0" min="0">
+        </div>
+        <div class="form-group">
+            <label for="recon">Recon Spawns</label>
+            <input type="number" id="recon" value="0" min="0">
+        </div>
+    </div>
+
+    <div id="result" class="result-box">
+        </div>
+</div>
+
+<script>
+    const inputs = ['battleType', 'factions', 'infantry', 'paratrooper', 'tank', 'plane', 'recon'];
+    
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateFun);
+    });
+
+    // Hide faction selector if Encounter is picked
+    document.getElementById('battleType').addEventListener('change', function() {
+        const factionGroup = document.getElementById('factionGroup');
+        if (this.value === 'encounter') {
+            factionGroup.style.opacity = '0.3';
+            document.getElementById('factions').disabled = true;
+        } else {
+            factionGroup.style.opacity = '1';
+            document.getElementById('factions').disabled = false;
+        }
+    });
+
+    function calculateFun() {
+        const battleType = document.getElementById('battleType').value;
+        const factions = parseInt(document.getElementById('factions').value);
+        
+        const inf = parseInt(document.getElementById('infantry').value) || 0;
+        const para = parseInt(document.getElementById('paratrooper').value) || 0;
+        const tank = parseInt(document.getElementById('tank').value) || 0;
+        const plane = parseInt(document.getElementById('plane').value) || 0;
+        const recon = parseInt(document.getElementById('recon').value) || 0;
+
+        // 1. Determine player target per faction
+        let targetPlayers = 12; // Encounter baseline
+        if (battleType === 'assault-skirmish') {
+            targetPlayers = (factions === 2) ? 18 : 12;
+        }
+
+        const requiredInfParaPlayers = Math.ceil(targetPlayers * 0.5); // 50% threshold
+
+        // 2. Calculate how many individual player roles these tickets can support
+        const supportedInf = Math.floor(inf / 12);
+        const supportedPara = Math.floor(para / 121);
+        const supportedTank = Math.floor(tank / 10);
+        const supportedPlane = Math.floor(plane / 10);
+        const supportedRecon = Math.floor(recon / 10);
+
+        // 3. Logic to see if conditions are met
+        // We need to fulfill the 50% Inf/Para restriction first
+        let infParaPool = supportedInf + supportedPara;
+        let infParaUsedForCore = Math.min(infParaPool, requiredInfParaPlayers);
+        
+        let coreFulfilled = infParaUsedForCore >= requiredInfParaPlayers;
+        
+        // Remaining slots can be filled by any leftover inf/para + specialized classes
+        let leftoverInfPara = infParaPool - infParaUsedForCore;
+        let totalSupportedPlayers = infParaUsedForCore + leftoverInfPara + supportedTank + supportedPlane + supportedRecon;
+        
+        let totalFulfilled = totalSupportedPlayers >= targetPlayers;
+
+        // 4. Render output
+        const resultDiv = document.getElementById('result');
+        resultDiv.className = 'result-box'; // reset
+
+        let html = '';
+        if (coreFulfilled && totalFulfilled) {
+            resultDiv.classList.add('status-fun');
+            html += `<div class="status-title">🎉 This Battle is FUN!</div>`;
+        } else {
+            resultDiv.classList.add('status-not-fun');
+            html += `<div class="status-title">⚠️ This Battle is NOT FUN</div>`;
+        }
+
+        html += `<p>Target players needed per faction: <strong>${targetPlayers}</strong></p>`;
+        html += `<ul>`;
+        html += `<li>Infantry/Paratrooper core: ${infParaUsedForCore}/${requiredInfParaPlayers} players met. ${coreFulfilled ? '✅' : '❌'}</li>`;
+        html += `<li>Total viable player allocations: ${totalSupportedPlayers}/${targetPlayers}. ${totalFulfilled ? '✅' : '❌'}</li>`;
+        html += `</ul>`;
+
+        resultDiv.innerHTML = html;
+    }
+
+    // Run on initial load
+    calculateFun();
+</script>
+
+</body>
+</html>
