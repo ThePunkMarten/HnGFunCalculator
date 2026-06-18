@@ -193,51 +193,70 @@
         const recon = parseInt(document.getElementById('recon').value) || 0;
 
         // 1. Determine player target per faction
-        let targetPlayers = 12; // Encounter baseline
+        let targetPlayers = 12; 
         if (battleType === 'assault-skirmish') {
             targetPlayers = (factions === 2) ? 18 : 12;
         }
 
-        const requiredInfParaPlayers = Math.ceil(targetPlayers * 0.5); // 50% threshold
+        const requiredInfParaPlayers = Math.ceil(targetPlayers * 0.5); 
 
-        // 2. Calculate how many individual player roles these tickets can support
+        // 2. Calculate supported player roles
         const supportedInf = Math.floor(inf / 12);
         const supportedPara = Math.floor(para / 121);
         const supportedTank = Math.floor(tank / 10);
         const supportedPlane = Math.floor(plane / 10);
         const supportedRecon = Math.floor(recon / 10);
 
-        // 3. Logic to see if conditions are met
-        // We need to fulfill the 50% Inf/Para restriction first
+        // 3. Evaluate Core Requirements
         let infParaPool = supportedInf + supportedPara;
         let infParaUsedForCore = Math.min(infParaPool, requiredInfParaPlayers);
-        
         let coreFulfilled = infParaUsedForCore >= requiredInfParaPlayers;
         
-        // Remaining slots can be filled by any leftover inf/para + specialized classes
+        // Evaluate Total Requirements
         let leftoverInfPara = infParaPool - infParaUsedForCore;
         let totalSupportedPlayers = infParaUsedForCore + leftoverInfPara + supportedTank + supportedPlane + supportedRecon;
-        
         let totalFulfilled = totalSupportedPlayers >= targetPlayers;
 
         // 4. Render output
         const resultDiv = document.getElementById('result');
-        resultDiv.className = 'result-box'; // reset
+        resultDiv.className = 'result-box'; 
 
         let html = '';
         if (coreFulfilled && totalFulfilled) {
             resultDiv.classList.add('status-fun');
             html += `<div class="status-title">🎉 This Battle is FUN!</div>`;
+            html += `<p>Target players needed per faction: <strong>${targetPlayers}</strong></p>`;
+            html += `<ul>`;
+            html += `<li>Infantry/Paratrooper core: ${infParaUsedForCore}/${requiredInfParaPlayers} players met. ✅</li>`;
+            html += `<li>Total viable player allocations: ${totalSupportedPlayers}/${targetPlayers}. ✅</li>`;
+            html += `</ul>`;
         } else {
             resultDiv.classList.add('status-not-fun');
             html += `<div class="status-title">⚠️ This Battle is NOT FUN</div>`;
+            html += `<p>Target players needed per faction: <strong>${targetPlayers}</strong></p>`;
+            html += `<ul>`;
+            html += `<li>Infantry/Paratrooper core: ${infParaUsedForCore}/${requiredInfParaPlayers} players met. ${coreFulfilled ? '✅' : '❌'}</li>`;
+            html += `<li>Total viable player allocations: ${totalSupportedPlayers}/${targetPlayers}. ${totalFulfilled ? '✅' : '❌'}</li>`;
+            html += `</ul>`;
+            
+            // Actionable Feedback Section
+            html += `<div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);">`;
+            html += `<strong>How to fix this match:</strong><br>`;
+            
+            if (!coreFulfilled) {
+                const missingCorePlayers = requiredInfParaPlayers - infParaUsedForCore;
+                const missingInfTickets = missingCorePlayers * 12;
+                html += `<p style="margin: 0.5rem 0; color: #fca5a5;">• You are critically low on core troops. Add at least <strong>${missingInfTickets} Infantry spawns</strong> (or a mix of Paratroopers) to meet the 50% core rule.</p>`;
+            } 
+            
+            if (!totalFulfilled && coreFulfilled) {
+                const missingTotalPlayers = targetPlayers - totalSupportedPlayers;
+                const missingInfTickets = missingTotalPlayers * 12;
+                const missingVehicleTickets = missingTotalPlayers * 10;
+                html += `<p style="margin: 0.5rem 0; color: #fca5a5;">• You have the required infantry base, but not enough overall resources for a full lobby. Add either <strong>${missingInfTickets} Infantry</strong> OR <strong>${missingVehicleTickets} total Spawns</strong> across Tanks/Planes/Recon to close the gap.</p>`;
+            }
+            html += `</div>`;
         }
-
-        html += `<p>Target players needed per faction: <strong>${targetPlayers}</strong></p>`;
-        html += `<ul>`;
-        html += `<li>Infantry/Paratrooper core: ${infParaUsedForCore}/${requiredInfParaPlayers} players met. ${coreFulfilled ? '✅' : '❌'}</li>`;
-        html += `<li>Total viable player allocations: ${totalSupportedPlayers}/${targetPlayers}. ${totalFulfilled ? '✅' : '❌'}</li>`;
-        html += `</ul>`;
 
         resultDiv.innerHTML = html;
     }
