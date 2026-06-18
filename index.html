@@ -215,8 +215,8 @@
             <h4>General Rules for a "Fun Battle"</h4>
             <ul>
                 <li><strong>Lobby Targets:</strong> Requires enough tickets to fill 18 players per faction (2-factions) or 12 players per faction (3-factions / Encounter).</li>
-                <li><strong>The 50% Core Rule:</strong> At least half of the required player base per faction must be explicitly supplied by Infantry or Paratrooper tickets.</li>
-                <li><strong>Class Ticket Thresholds:</strong> A single player allocation requires <strong>12</strong> Infantry/Paratrooper* tickets, or <strong>10</strong> Tank/Plane/Recon tickets.</li>
+                <li><strong>The 50% Core Rule:</strong> At least half of the required player base per faction must be explicitly supplied by <strong>Infantry tickets only</strong>. Paratrooper tickets do not count toward this core threshold.</li>
+                <li><strong>Class Ticket Thresholds:</strong> A single player allocation requires <strong>12</strong> Infantry or Paratrooper* tickets, or <strong>10</strong> Tank/Plane/Recon tickets.</li>
                 <li style="list-style: none; margin-left: -1.25rem; margin-top: 0.4rem; font-size: 0.8rem; font-style: italic;">*Note: Airborne Paratrooper units require 12 spawns and 4 paraplanes per ticket build.</li>
             </ul>
         </div>
@@ -261,20 +261,21 @@
             targetPlayers = (factions === 2) ? 18 : 12;
         }
 
-        const requiredInfParaPlayers = Math.ceil(targetPlayers * 0.5); 
+        const requiredInfPlayers = Math.ceil(targetPlayers * 0.5); 
 
         const supportedInf = Math.floor(inf / 12);
-        const supportedPara = Math.floor(para / 121);
+        const supportedPara = Math.floor(para / 12);
         const supportedTank = Math.floor(tank / 10);
         const supportedPlane = Math.floor(plane / 10);
         const supportedRecon = Math.floor(recon / 10);
 
-        let infParaPool = supportedInf + supportedPara;
-        let infParaUsedForCore = Math.min(infParaPool, requiredInfParaPlayers);
-        let coreFulfilled = infParaUsedForCore >= requiredInfParaPlayers;
+        // Core rule validation using strictly Infantry
+        let infUsedForCore = Math.min(supportedInf, requiredInfPlayers);
+        let coreFulfilled = infUsedForCore >= requiredInfPlayers;
         
-        let leftoverInfPara = infParaPool - infParaUsedForCore;
-        let totalSupportedPlayers = infParaUsedForCore + leftoverInfPara + supportedTank + supportedPlane + supportedRecon;
+        // Remaining slots can be filled by any excess infantry and all other support classes
+        let leftoverInf = supportedInf - infUsedForCore;
+        let totalSupportedPlayers = infUsedForCore + leftoverInf + supportedPara + supportedTank + supportedPlane + supportedRecon;
         let totalFulfilled = totalSupportedPlayers >= targetPlayers;
 
         const resultDiv = document.getElementById('result');
@@ -286,7 +287,7 @@
             html += `<div class="status-title">🎉 This Battle is FUN!</div>`;
             html += `<p style="margin: 0 0 0.5rem 0;">Target players needed per faction: <strong>${targetPlayers}</strong></p>`;
             html += `<ul>`;
-            html += `<li>Infantry/Paratrooper core: ${infParaUsedForCore}/${requiredInfParaPlayers} players met. ✅</li>`;
+            html += `<li>Infantry core: ${infUsedForCore}/${requiredInfPlayers} players met. ✅</li>`;
             html += `<li>Total viable player allocations: ${totalSupportedPlayers}/${targetPlayers}. ✅</li>`;
             html += `</ul>`;
         } else {
@@ -294,7 +295,7 @@
             html += `<div class="status-title">⚠️ This Battle is NOT FUN</div>`;
             html += `<p style="margin: 0 0 0.5rem 0;">Target players needed per faction: <strong>${targetPlayers}</strong></p>`;
             html += `<ul>`;
-            html += `<li>Infantry/Paratrooper core: ${infParaUsedForCore}/${requiredInfParaPlayers} players met. ${coreFulfilled ? '✅' : '❌'}</li>`;
+            html += `<li>Infantry core: ${infUsedForCore}/${requiredInfPlayers} players met. ${coreFulfilled ? '✅' : '❌'}</li>`;
             html += `<li>Total viable player allocations: ${totalSupportedPlayers}/${targetPlayers}. ${totalFulfilled ? '✅' : '❌'}</li>`;
             html += `</ul>`;
             
@@ -302,16 +303,16 @@
             html += `<strong>How to fix this match:</strong><br>`;
             
             if (!coreFulfilled) {
-                const missingCorePlayers = requiredInfParaPlayers - infParaUsedForCore;
+                const missingCorePlayers = requiredInfPlayers - infUsedForCore;
                 const missingInfTickets = missingCorePlayers * 12;
-                html += `<p style="margin: 0.4rem 0; color: #fca5a5;">• You are low on core troops. Add at least <strong>${missingInfTickets} Infantry spawns</strong> (or a mix of Paratroopers) to meet the 50% core rule.</p>`;
+                html += `<p style="margin: 0.4rem 0; color: #fca5a5;">• You are low on core troops. Add at least <strong>${missingInfTickets} Infantry spawns</strong> to meet the 50% core rule.</p>`;
             } 
             
             if (!totalFulfilled && coreFulfilled) {
                 const missingTotalPlayers = targetPlayers - totalSupportedPlayers;
                 const missingInfTickets = missingTotalPlayers * 12;
                 const missingVehicleTickets = missingTotalPlayers * 10;
-                html += `<p style="margin: 0.4rem 0; color: #fca5a5;">• You have the required infantry base, but not enough overall resources for a full lobby. Add either <strong>${missingInfTickets} Infantry</strong> OR <strong>${missingVehicleTickets} total Spawns</strong> across Tanks/Planes/Recon to close the gap.</p>`;
+                html += `<p style="margin: 0.4rem 0; color: #fca5a5;">• You have the required infantry base, but not enough overall resources for a full lobby. Add either <strong>${missingInfTickets} Infantry</strong> OR <strong>${missingVehicleTickets} total Spawns</strong> across your other classes to close the gap.</p>`;
             }
             html += `</div>`;
         }
